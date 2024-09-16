@@ -1,8 +1,19 @@
 {
     "cSpell.words": [
+        "barh",
         "dotenv",
+        "edgecolor",
+        "figsize",
+        "fontsize",
         "iloc",
         "mysqlconnector",
-        "sqlalchemy"
+        "ngram",
+        "ngrams",
+        "sqlalchemy",
+        "xlabel",
+        "xticks",
+        "yagi",
+        "ylabel",
+        "ylim"
     ]
 }

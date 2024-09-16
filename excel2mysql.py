@@ -25,6 +25,7 @@ engine = create_engine(
 date_format = "%d/%m/%Y %H:%M:%S"
 
 directory = 'output/vcb'
+fileOutput = 'output/vcb.xlsx'
 data = list()
 
 rowCount = 0
@@ -55,4 +56,5 @@ for filename in files:
         index = index + 1
 
 df = pd.DataFrame(data, columns=['id', 'issue_date', 'amount', 'message'])
+df.to_excel(fileOutput, index=False)
 df.to_sql(table, con=engine, if_exists='replace', index=False)
