@@ -4,7 +4,8 @@ import os
 import re
 from collections import Counter
 from nltk import ngrams
-import heapq
+
+from pdf_helpers import format_number
 
 
 def get_ngrams(words, n):
@@ -164,6 +165,18 @@ def remove_word(word):
         return False
     if word == 'chi':
         return False
+    if word == 'ngan':
+        return False
+    if word == 'lien':
+        return False
+    if word == 'trung':
+        return False
+    if word == 'ban':
+        return False
+    if word == 'uong':
+        return False
+    if word == 'uy':
+        return False
     return True
 
 
@@ -186,6 +199,7 @@ def clean_message(text):
     text = list(filter(lambda x: remove_word(x), text))
     return " ".join(text)
 
+
 def preprocess_text(text):
     text = text.lower()
     text = re.sub(r'\W+', ' ', text)
@@ -193,25 +207,12 @@ def preprocess_text(text):
     return words
 
 
-def format_number(num):
-    if num >= 1_000_000_000_000:
-        return f'{num / 1_000_000_000_000:.1f}T'
-    if num >= 1_000_000_000:
-        return f'{num / 1_000_000_000:.1f}B'
-    elif num >= 1_000_000:
-        return f'{num / 1_000_000:.1f}M'
-    elif num >= 1_000:
-        return f'{num / 1_000:.1f}K'
-    else:
-        return str(num)
-
-
-directory = 'chart/vcb'
+directory = 'output/chart/vcb'
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-fileOutput = 'output/vcb.xlsx'
-df = pd.read_excel(fileOutput)
+fileOutput = 'output/vcb.csv'
+df = pd.read_csv(fileOutput)
 
 df['message'] = df['message'].apply(clean_message)
 text = " ".join(df['message'])

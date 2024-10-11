@@ -2,8 +2,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import re
-from collections import Counter
 from nltk import ngrams
+
+from pdf_helpers import format_number
 
 
 def get_ngrams(words, n):
@@ -90,25 +91,12 @@ def preprocess_text(text):
     return words
 
 
-def format_number(num):
-    if num >= 1_000_000_000_000:
-        return f'{num / 1_000_000_000_000:.1f}T'
-    if num >= 1_000_000_000:
-        return f'{num / 1_000_000_000:.1f}B'
-    elif num >= 1_000_000:
-        return f'{num / 1_000_000:.1f}M'
-    elif num >= 1_000:
-        return f'{num / 1_000:.1f}K'
-    else:
-        return str(num)
-
-
-directory = 'chart/vcb'
+directory = 'output/chart/vcb'
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-fileOutput = 'output/vcb.xlsx'
-df = pd.read_excel(fileOutput)
+fileOutput = 'output/vcb.csv'
+df = pd.read_csv(fileOutput)
 df['issue_date'] = pd.to_datetime(df['issue_date'])
 df['issue_date'] = df['issue_date'].dt.strftime('%d/%m')
 
@@ -192,3 +180,20 @@ plt.legend()
 plt.ylabel('Lớn/nhỏ nhất')
 plt.ylim(bottom=0.1)
 plt.savefig(f'{directory}/daily_min_max.png')
+
+bins = [0, 50_000, 100_000, 500_000, 1_000_000, 10_000_000,
+        50_000_000, 100_000_000, 200_000_000, float('inf')]
+labels = [format_number(50_000), format_number(100_000), format_number(500_000), format_number(1_000_000), format_number(
+    10_000_000), format_number(50_000_000), format_number(100_000_000), format_number(200_000_000), format_number(500_000_000)]
+df_amount_group = df
+df_amount_group['amount_group'] = pd.cut(
+    df_amount_group['amount'], bins=bins, labels=labels, right=False)
+amount_group = df_amount_group['amount_group'].value_counts().sort_index()
+plt.figure(figsize=(10, 6))
+ax = amount_group.plot(kind='bar')
+for i in ax.containers:
+    ax.bar_label(i)
+plt.title('Nhóm giao dịch')
+plt.xticks(rotation=90)
+plt.ylim(bottom=0.1)
+plt.savefig(f'{directory}/amount_group.png')

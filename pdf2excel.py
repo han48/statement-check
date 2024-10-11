@@ -1,20 +1,57 @@
-import tabula
+import glob
 import PyPDF2
 import os
+from dotenv import load_dotenv
+import pdfplumber
 
-directory = 'output/vcb'
-input = 'input/data.pdf'
+from pdf_helpers import process_pdf_camelot, process_pdf_plumber, process_pdf_tabula
+load_dotenv(override=True)
+
+directory = os.getenv('OUTPUT')
+inputDirectory = os.getenv('INPUT')
+
 if not os.path.exists(directory):
     os.makedirs(directory)
 
-total_pages = 0
-with open(input, 'rb') as file:
-    reader = PyPDF2.PdfReader(file)
-    total_pages = len(reader.pages)
+files = sorted(glob.glob(os.path.join(inputDirectory, "*.pdf")))
 
-for page in range(1, total_pages):
-    print(f"Export start: {page}/{total_pages - 1}")
-    df = tabula.read_pdf(input, pages=page, stream=True)[0]
-    df.to_excel(
-        f"{directory}/data_{str(page).zfill(8)}.xlsx", index=False)
-    print(f"Export   end: {page}/{total_pages - 1}")
+prefix = 0
+inputs = list()
+total_pages = 0
+total_files = 0
+for input in files:
+    with pdfplumber.open(input) as pdf:
+        print(f"Loading total page: {input}")
+        total_page = len(pdf.pages)
+        total_pages = total_pages + total_page
+        total_files = total_files + 1
+        inputs.append((input, total_page))
+
+current_pages = 0
+for input, total_page in inputs:
+    input_type = str(input).split('.')
+    input_type = input_type[len(input_type) - 2]
+    ranges = range(1, total_page)
+    match input_type:
+        case 'tabula':
+            for page in ranges:
+                try:
+                    current_pages = current_pages + 1
+                    process_pdf_tabula(
+                        [input, page, total_pages, prefix, directory],
+                        [total_files, total_pages, current_pages]
+                    )
+                except Exception as e:
+                    print(f"    {str(e)}")
+        case 'plumber':
+            with pdfplumber.open(input) as pdf:
+                for page in ranges:
+                    try:
+                        current_pages = current_pages + 1
+                        process_pdf_plumber(
+                            [pdf, page, total_page, prefix, directory],
+                            [total_files, total_pages, current_pages]
+                        )
+                    except Exception as e:
+                        print(f"    {str(e)}")
+    prefix = prefix + 1
